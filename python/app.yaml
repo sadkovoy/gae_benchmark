@@ -1,0 +1,16 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+service: python
+
+manual_scaling:
+  instances: 1
+
+handlers:
+  - url: /.*
+    script: app.app
+
+libraries:
+  - name: flask
+    version: 0.12
