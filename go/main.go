@@ -1,10 +1,11 @@
 package main
 
 import (
-	"context"
+	"net/http"
 
-	"cloud.google.com/go/datastore"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 )
 
 type Human struct {
@@ -14,12 +15,6 @@ type Human struct {
 }
 
 func main() {
-	ctx := context.Background()
-	dsClient, err := datastore.NewClient(ctx, "wixgamma")
-	if err != nil {
-		panic(err)
-	}
-
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
@@ -28,19 +23,22 @@ func main() {
 	})
 
 	r.GET("/benchmark", func(c *gin.Context) {
+		ctx := appengine.NewContext(c.Request)
+
 		keys := []*datastore.Key{
-			datastore.NameKey("Human", "ID1", nil),
-			datastore.NameKey("Human", "ID2", nil),
-			datastore.NameKey("Human", "ID3", nil),
+			datastore.NewKey(ctx, "Human", "ID1", 0, nil),
+			datastore.NewKey(ctx, "Human", "ID2", 0, nil),
+			datastore.NewKey(ctx, "Human", "ID3", 0, nil),
 		}
 		humans := make([]Human, 3)
 
-		if err := dsClient.GetMulti(ctx, keys, humans); err != nil {
-			c.JSON(500, gin.H{"error": err})
+		if err := datastore.GetMulti(ctx, keys, humans); err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(200, gin.H{"humans": humans})
 		}
-
-		c.JSON(200, gin.H{"humans": humans})
 	})
 
-	r.Run()
+	http.Handle("/", r)
+	appengine.Main()
 }

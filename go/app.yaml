@@ -1,4 +1,9 @@
 runtime: go
-service: golang
+api_version: go1.9
+service: golang2
 manual_scaling:
   instances: 1
+env: standard
+handlers:
+  - url: /.*
+    script: _go_app
